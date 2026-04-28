@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import ChatWindow from "./ChatWindow";
-import { chatApi } from "../../api/chatApi";
+import { ChatApi, chatApi } from "../../api/chatApi";
 
 function ChatPage() {
   const [chats, setChats] = useState([]);
@@ -16,7 +16,7 @@ function ChatPage() {
 
   const loadChats = async () => {
     try {
-      const res = await chatApi.get(`/Chat/chat-list/${userId}`);
+      const res = await ChatApi.get(`/Chat/chat-list/${userId}`);
       setChats(res.data);
     } catch (err) {
       console.error(err);

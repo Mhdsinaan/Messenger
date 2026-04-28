@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { chatApi } from "../../api/chatApi";
+import { ChatApi } from "../api/chatApi";
 import { UseSignalR } from "../Hooks/useSignalR";
 import { useChat } from "./Context/ChatContext";
 
@@ -28,7 +28,7 @@ function AddMembersPanel({ activeChat, currentMemberIds, onBack, onAdded }) {
 
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await chatApi.get(`/Chat/search-users?word=${encodeURIComponent(trimmed)}`);
+        const res = await ChatApi.get(`/Chat/search-users?word=${encodeURIComponent(trimmed)}`);
         const users = res.data || [];
         setResults(users.filter((u) => !currentMemberIds.includes(u.userId ?? u.UserId)));
       } catch (err) {
@@ -53,7 +53,7 @@ function AddMembersPanel({ activeChat, currentMemberIds, onBack, onAdded }) {
     setAdding(true);
     setError("");
     try {
-      await chatApi.post("/Chat/add-members", {
+      await ChatApi.post("/Chat/add-members", {
         groupId: activeChat.groupId,
         userIds: selected,
       });
@@ -223,7 +223,6 @@ function GroupSettingsModal({ activeChat, userId, onClose }) {
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      // ── ACTIVE CHAT DEBUG ────────────────────────────────────────────────
       console.group("🎯 Active Chat Debug");
       console.log("Full activeChat object:", JSON.stringify(activeChat, null, 2));
       console.log("activeChat.groupId:", activeChat.groupId, "| type:", typeof activeChat.groupId);
@@ -231,17 +230,12 @@ function GroupSettingsModal({ activeChat, userId, onClose }) {
       console.log("activeChat.chatId:", activeChat.chatId, "| type:", typeof activeChat.chatId);
       console.log("URL being called:", `/Chat/group-members/${activeChat.groupId}`);
       console.groupEnd();
-      // ────────────────────────────────────────────────────────────────────
 
-      const res = await chatApi.get(`/Chat/group-members/${activeChat.groupId}`);
+      const res = await ChatApi.get(`/Chat/group-members/${activeChat.groupId}`);
 
-      // ── ENHANCED DEBUG LOGS ──────────────────────────────────────────────
       console.group("🔍 Group Members Debug");
-
       console.log("📦 Raw API response:", res.data);
-
       console.log("🙋 My userId (prop):", userId, "| type:", typeof userId);
-
       console.table(
         (res.data || []).map((m) => ({
           userId:      m.userId  ?? m.UserId,
@@ -265,21 +259,14 @@ function GroupSettingsModal({ activeChat, userId, onClose }) {
       console.log("⭐ Am I admin?", amIAdmin);
 
       if (!amIInList) {
-        console.warn(
-          "⚠️ Current user (userId =", userId, ") is NOT present in the API response.",
-          "This is a backend issue — the /Chat/group-members endpoint is not returning the current user."
-        );
+        console.warn("⚠️ Current user (userId =", userId, ") is NOT present in the API response.");
       } else if (!amIAdmin) {
-        console.warn(
-          "⚠️ Current user IS in the list but isAdmin is false.",
-          "Check the DB — the user may not have admin rights for this group."
-        );
+        console.warn("⚠️ Current user IS in the list but isAdmin is false.");
       } else {
-        console.log("✅ Current user is in the list and is an admin. Add button should be visible.");
+        console.log("✅ Current user is in the list and is an admin.");
       }
 
       console.groupEnd();
-      // ────────────────────────────────────────────────────────────────────
 
       setMembers(res.data || []);
     } catch (err) {
@@ -295,7 +282,7 @@ function GroupSettingsModal({ activeChat, userId, onClose }) {
     if (!window.confirm("Are you sure you want to exit this group?")) return;
     setExiting(true);
     try {
-      await chatApi.post("/Chat/exit-group", { groupId: activeChat.groupId, userId });
+      await ChatApi.post("/Chat/exit-group", { groupId: activeChat.groupId, userId });
       onClose();
       window.location.reload();
     } catch (err) {
@@ -528,8 +515,8 @@ function ChatWindow() {
   const userId = parseInt(localStorage.getItem("userId"));
   const { activeChat } = useChat();
 
-  const [messages, setMessages]     = useState([]);
-  const [text, setText]             = useState("");
+  const [messages, setMessages]         = useState([]);
+  const [text, setText]                 = useState("");
   const [showSettings, setShowSettings] = useState(false);
 
   const bottomRef = useRef(null);
@@ -552,9 +539,9 @@ function ChatWindow() {
     try {
       let res;
       if (isGroup) {
-        res = await chatApi.get(`/Chat/group/${activeChat.groupId}`);
+        res = await ChatApi.get(`/Chat/group/${activeChat.groupId}`);
       } else {
-        res = await chatApi.get(
+        res = await ChatApi.get(
           `/Chat/personal?senderId=${userId}&receiverId=${activeChat.userId}`
         );
       }
